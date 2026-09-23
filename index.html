@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
+<meta name="color-scheme" content="light only"/>
+<meta name="theme-color" content="#e7e3da"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>only Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f5f0;
+  --topbar-dark:#e7e3da;
+  --tab-shadow: rgba(112,103,81,0.38);
+  --white:#ffffff;
+  --text:#242320;
+  --text-muted:#9a9384;
+  --date:#3b7dd8;
+  --border:#e5e0d3;
+  --shadow: 6px 8px 22px rgba(60,50,30,0.14);
+  --shadow-soft: 3px 5px 10px rgba(60,50,30,0.22);
+  --radius:16px;
+  --topbar-h:58px;
+  --tab-top-margin:9px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  font-family:'DM Sans',sans-serif;
+  color:var(--text);
+  overflow:hidden;
+  font-size:15px;
+}
+img{-webkit-user-drag:none;user-select:none;}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit;}
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+}
+.hidden{display:none !important;}
+
+/* ── TOPBAR (pantalla principal) ── */
+#topbar-wrap{
+  position:relative;
+  flex-shrink:0;
+}
+#topbar{
+  position:relative;
+  background:var(--topbar-dark);
+  height:calc(var(--topbar-h) + env(safe-area-inset-top,0px));
+  padding-top:env(safe-area-inset-top,0px);
+  display:flex;align-items:flex-end;
+  z-index:1;
+}
+#folder-tab-back{
+  position:absolute;
+  top:var(--tab-top-margin);
+  left:0;
+  width:calc(50% + 10px);
+  height:calc(var(--topbar-h) - var(--tab-top-margin));
+  background:var(--bg);
+  border-radius:16px 16px 0 0;
+  box-shadow: 5px 4px 10px var(--tab-shadow);
+  z-index:0;
+}
+#folder-tab{
+  width:50%;
+  height:calc(var(--topbar-h) - var(--tab-top-margin));
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:0 14px;
+  font-family:'DM Sans',sans-serif;
+  font-weight:700;
+  font-size:18px;
+  color:var(--text);
+  overflow:hidden;
+  border-radius:16px 16px 0 0;
+  box-shadow: 6px 7px 14px var(--tab-shadow);
+  position:relative;
+  z-index:1;
+}
+#folder-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#folder-count{
+  font-weight:400;
+  font-size:16px;
+  color:var(--text-muted);
+  flex-shrink:0;
+}
+#seam-mask{
+  position:absolute;
+  left:0;bottom:0;
+  width:50%;
+  height:18px;
+  background:var(--bg);
+  z-index:2;
+}
+#topbar-actions{
+  position:absolute;
+  right:0;top:0;bottom:0;
+  width:50%;
+  display:flex;align-items:center;justify-content:flex-start;
+  gap:20px;
+  padding:0 26px 0 34px;
+  z-index:1;
+}
+#btn-menu{ margin-left:auto; }
+.icon-btn{
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+#btn-plus{font-size:26px;font-weight:400;color:var(--text);line-height:1;width:30px;height:30px;}
+#btn-folder img{
+  height:26px;width:auto;
+  display:block;
+  filter:drop-shadow(2px 3px 2px var(--tab-shadow)) drop-shadow(2px 3px 2px var(--tab-shadow));
+}
+#btn-menu img{
+  height:26px;width:auto;
+  display:block;
+  filter:drop-shadow(var(--shadow-soft));
+}
+
+/* ── LISTA DE NOTAS ── */
+#notes-list{
+  position:relative;
+  z-index:3;
+  background:var(--bg);
+  flex:1;overflow-y:auto;
+  padding:38px 20px 30px;
+}
+.note-card{
+  padding:22px 2px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+.note-card:last-child{border-bottom:none;}
+.note-title{
+  font-family:'DM Sans',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  letter-spacing:normal;
+  margin-bottom:8px;
+  color:var(--text);
+}
+.note-preview{
+  font-size:15px;
+  line-height:1.5;
+  color:var(--text);
+  white-space:pre-wrap;
+  overflow:hidden;
+  margin-bottom:10px;
+}
+.note-date{
+  font-size:13px;
+  color:var(--date);
+}
+.read-more{
+  color:var(--text-muted);
+  font-weight:600;
+}
+#empty-state{
+  padding:60px 24px;
+  text-align:center;
+  color:var(--text-muted);
+  font-size:15px;
+  line-height:1.6;
+}
+
+/* ── EDITOR DE NOTA ── */
+#editor-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;
+  padding-top:calc(14px + env(safe-area-inset-top,0px));
+  flex-shrink:0;
+}
+#btn-back{font-size:24px;color:var(--text);padding:6px 10px;margin-left:-10px;}
+#editor-body-wrap{
+  flex:1;overflow-y:auto;
+  padding:8px 26px 40px;
+  transition:padding-bottom 0.15s ease;
+}
+#editor-body-wrap.kb-open{
+  padding-bottom:280px;
+}
+#note-title-input{
+  width:100%;
+  border:none;background:none;outline:none;
+  font-family:'Lora',serif;
+  font-size:22px;
+  font-weight:600;
+  color:var(--text);
+  margin-bottom:8px;
+}
+#note-title-input::placeholder{color:var(--text-muted);font-weight:500;}
+#note-date-display{
+  font-family:'Lora',serif;
+  font-size:14px;
+  color:var(--text-muted);
+  margin-bottom:24px;
+  display:block;
+}
+#note-body-input{
+  width:100%;min-height:40vh;
+  border:none;background:none;outline:none;resize:none;
+  font-family:'DM Sans',sans-serif;
+  font-size:16px;
+  line-height:1.75;
+  color:var(--text);
+}
+#note-body-input::placeholder{color:var(--text-muted);}
+
+#editor-footer{
+  flex-shrink:0;
+  padding:16px 26px calc(18px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;justify-content:flex-end;
+  gap:22px;
+  border-top:1px solid var(--border);
+}
+#btn-cancel{font-size:15px;color:var(--text-muted);}
+#btn-save{font-size:15px;color:var(--date);font-weight:600;}
+
+/* ── VENTANAS FLOTANTES (MODALES) ── */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(30,28,22,0.28);
+  display:flex;align-items:center;justify-content:center;
+  z-index:200;
+  padding:24px;
+}
+.modal-box{
+  background:var(--white);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  width:100%;max-width:380px;
+  padding:26px 24px;
+  max-height:80vh;
+  display:flex;flex-direction:column;
+}
+.modal-title{
+  font-family:'Lora',serif;
+  font-size:19px;font-weight:600;
+  margin-bottom:16px;
+  color:var(--text);
+}
+.modal-subtitle{
+  font-size:13px;color:var(--text-muted);
+  margin:-8px 0 16px;line-height:1.5;
+}
+.new-folder-row{
+  display:flex;gap:10px;margin-bottom:18px;flex-shrink:0;
+}
+.new-folder-input{
+  flex:1;padding:11px 14px;
+  border:1px solid var(--border);border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;color:var(--text);
+}
+.new-folder-input:focus{border-color:var(--date);}
+.new-folder-add{
+  background:var(--text);color:#fff;
+  padding:0 18px;border-radius:10px;
+  font-size:14px;font-weight:600;
+}
+.folder-chips{
+  display:flex;flex-wrap:wrap;gap:10px;
+  overflow-y:auto;
+}
+.folder-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;
+  border-radius:20px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  font-size:14px;color:var(--text);
+  cursor:pointer;
+}
+.folder-chip.active{
+  background:var(--topbar-dark);
+  border-color:var(--topbar-dark);
+  font-weight:600;
+}
+.folder-chip .chip-name{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chip-action{
+  font-size:12px;color:var(--text-muted);
+  padding:2px 4px;
+}
+.chip-action:hover{color:var(--text);}
+.modal-actions-row{
+  margin-top:20px;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-shrink:0;
+}
+.modal-link-btn{
+  font-size:14px;color:var(--text-muted);font-weight:600;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ PANTALLA 1: LISTA DE NOTAS ═══════ -->
+<div id="screen-list" class="screen">
+  <div id="topbar-wrap">
+  <div id="topbar">
+    <div id="folder-tab-back"></div>
+    <div id="folder-tab">
+      <span id="folder-name">Notas</span>
+      <span id="folder-count">0</span>
+    </div>
+    <div id="topbar-actions">
+      <button class="icon-btn" id="btn-plus" aria-label="Nueva nota">+</button>
+      <button class="icon-btn" id="btn-folder" aria-label="Carpetas">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAACfCAYAAAC805bRAAAEYElEQVR42u3cv2tdZRjA8e9zzrlJ2oSmCB3cJRQR0zai4CK6Voq/qIv+AU66d+hWBUH/BqfaBBG1g3TSScGGtGlQRAdBtFOFWkhy7z3nPA65t01T0SHNNdd8P0uWTO/L9zzvublvgoFcpIyzNHmVWSZ4E3iJluPANC1QoL00XOOkR8EvlFyhy0exwM+ZBEAE6UKNVtwXxzVeocO7VMyRQD3YOI12RyqgBPr8QcP78STvGcl/tB3bJsc7zPIhNbBJM9iq2NoWjUwCQZIkFSWzwC0ucoI3hr9hJKOeICucZobLbNAMJkbp0uyLWJKg5hE63OJCnOTc8IHm4oxqgqwxQ59lDjHHBg1hHPsukpKWAmg4GfPcyKSI8PA7CgU9Xh3E0RrHvpzxQUNymJKWtwD4yo9MRqUiOEOQeK7d3w+yLgm8kEkVQZ0QgXu29wsPczQE6VNpX8+RmiB4lB84BsB5Pz4ZVSBTPofG4l0Ekg5dJl2M0QYiyUAkA5EMRDIQyUAkA5EMRDIQ6YCpXIIx0yUyCZYGP7Ur/3a3xkDGTYc2gkxo/bLiw5F591vs7c5gDGTcTFBlUrJEmce8E7LrCfI8dcS9C2g779oYyFjsIsMtm6LhS67TY87j1e5HB+R17hB8D3zOJ3wRQb391mbkCj8xwWP0SG+gj8UEwV16iIrBmGiAPt+xyduxwDfDSAxk/LS+eezFLAGmKenTpcvrcYrPMik8Yo3jM8/H2N5Yp6Zikkk+zlWeiWDVv4NI91T0qZliioYP8jyFRyzpwQPX1ge/yXNOEGmnoGWKoOVMAXR86ZPumyAx+A+XjxcEHVdEeiASgMMesaR/YCCSgUgGIhmIZCCSgUgGIhmIZCCSgUgyEMlAJAORDEQyEMlAJAORDEQyEMlAJBmIZCCSgUgGIhmIZCCSgUgGIhmIJAORDEQyEMlAJAORDEQyEMlAJAORDESSgUgGIhmIZCCSgUgGIhmIZCCSgUgaBtLSJVwI6e8DCRqXQfKIJRmIZCCSgUgGIhmIZCCSgUgGIslAJAORDEQyEMlAJAORDEQyEMlAJAORZCCSgUgGIhmIZCCSgUgGIhmIZCCSDEQyEMlAJAORDEQyEMlAJAORDEQyEEkGIhmIZCCSgUgGIhmIZCCSgUgGIslAJAORDEQyEMlAJAORDEQyEMlAJAORZCCSgUgGIhmIZCCSgUgGIhmIZCCSgUgyEMlAJAORRhvIHQII0uWQBi0EALcLYJWKBAORtkUCsFJQcIn+tmYkz1XBBj0aPi34kSv0+JojFCS1q6MDLelzhIKGpVhgNQDyGk/Q4VuCabrUBJUrpQOXRlIzTYdNbtLnKU5xs8pFyjjBWi7zGoe4yCxH+ROAxmOXDtCxquAoHdb5lT4vxwK/Z1JsTZBFyjhLk1c5zhQXSF5kko6v7joQL+MBdFkHlrjDuXiW3zIpImjvTohhJAC5xtMkp2mYJ5lxFfU/jSMJbhMsk1yOeW4ADOMA+As3iB87GmM1bAAAAABJRU5ErkJggg==" alt="Carpetas"/>
+      </button>
+      <button class="icon-btn" id="btn-menu" aria-label="Menú">
+        <img src="data:image/png;base64,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" alt="Menú"/>
+      </button>
+    </div>
+  </div>
+  <div id="seam-mask"></div>
+  </div>
+  <div id="notes-list"></div>
+</div>
+
+<!-- ═══════ PANTALLA 2: EDITOR DE NOTA ═══════ -->
+<div id="screen-editor" class="screen hidden">
+  <div id="editor-header">
+    <button class="icon-btn" id="btn-back" aria-label="Volver">&#8592;</button>
+    <button class="icon-btn" id="btn-menu-editor" aria-label="Menú">
+      <img src="data:image/png;base64,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" alt="Menú" style="height:24px;"/>
+    </button>
+  </div>
+  <div id="editor-body-wrap">
+    <input id="note-title-input" type="text" placeholder="Título de la nota"/>
+    <span id="note-date-display"></span>
+    <textarea id="note-body-input" placeholder="Escribe aquí..."></textarea>
+  </div>
+  <div id="editor-footer">
+    <button id="btn-cancel">Cancelar</button>
+    <button id="btn-save">Guardar</button>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: ELEGIR/GESTIONAR CARPETAS (uso general, desde icono carpeta) ═══════ -->
+<div class="modal-overlay hidden" id="modal-folders">
+  <div class="modal-box">
+    <div class="modal-title">Carpetas</div>
+    <div class="new-folder-row">
+      <input class="new-folder-input" id="new-folder-input" type="text" placeholder="Nueva carpeta..."/>
+      <button class="new-folder-add" id="new-folder-add">Crear</button>
+    </div>
+    <div class="folder-chips" id="folder-chips"></div>
+    <div class="modal-actions-row"><button class="modal-link-btn" id="modal-close">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: GUARDAR NOTA EN CARPETA (se abre al pulsar Guardar) ═══════ -->
+<div class="modal-overlay hidden" id="modal-save-pick">
+  <div class="modal-box">
+    <div class="modal-title" id="save-pick-title">Guardar en...</div>
+    <div class="new-folder-row">
+      <input class="new-folder-input" id="save-new-folder-input" type="text" placeholder="Nueva carpeta..."/>
+      <button class="new-folder-add" id="save-new-folder-add">Crear</button>
+    </div>
+    <div class="folder-chips" id="save-pick-chips"></div>
+    <div class="modal-actions-row">
+      <button class="modal-link-btn" id="save-pick-discard">Descartar nota</button>
+      <button class="modal-link-btn" id="save-pick-direct" style="font-weight:700;">Guardar</button>
+      <button class="modal-link-btn" id="save-pick-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "onlyNotesData";
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+  function loadData(){
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      try{
+        var parsed = JSON.parse(raw);
+        if(!parsed.folders.some(function(f){ return f.isAll; })){
+          parsed.folders[0].isAll = true;
+        }
+        return parsed;
+      }catch(e){}
+    }
+    var defaultFolders = [
+      {id: uid(), name: "Notas", isAll: true},
+      {id: uid(), name: "Carpeta 1"}
+    ];
+    return {
+      folders: defaultFolders,
+      notes: [],
+      currentFolderId: defaultFolders[0].id
+    };
+  }
+
+  var data = loadData();
+
+  function saveData(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function getFolder(id){
+    return data.folders.find(function(f){ return f.id === id; });
+  }
+
+  function getAllFolder(){
+    return data.folders.find(function(f){ return f.isAll; }) || data.folders[0];
+  }
+
+  function currentFolder(){
+    return getFolder(data.currentFolderId) || data.folders[0];
+  }
+
+  function notesInFolder(folder){
+    var list = folder.isAll
+      ? data.notes.slice()
+      : data.notes.filter(function(n){ return n.folderId === folder.id; });
+    return list.sort(function(a,b){ return b.updatedAt - a.updatedAt; });
+  }
+
+  function formatDate(ts){
+    var d = new Date(ts);
+    var meses = ["ene.","feb.","mar.","abr.","may.","jun.","jul.","ago.","sept.","oct.","nov.","dic."];
+    return d.getDate() + " " + meses[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  // ── RENDER: LISTA DE NOTAS ──
+  var folderNameEl = document.getElementById("folder-name");
+  var folderCountEl = document.getElementById("folder-count");
+  var notesListEl = document.getElementById("notes-list");
+
+  function renderList(){
+    var folder = currentFolder();
+    var notes = notesInFolder(folder);
+    folderNameEl.textContent = folder.name;
+    folderCountEl.textContent = notes.length;
+
+    notesListEl.innerHTML = "";
+    if(notes.length === 0){
+      var empty = document.createElement("div");
+      empty.id = "empty-state";
+      empty.textContent = "No hay notas en esta carpeta todavía. Pulsa + para crear la primera.";
+      notesListEl.appendChild(empty);
+      return;
+    }
+    notes.forEach(function(note){
+      var card = document.createElement("div");
+      card.className = "note-card";
+      var title = note.title && note.title.trim() ? note.title : "Sin título";
+      var rawPreview = (note.body || "").trim();
+      var flatPreview = rawPreview.replace(/\s+/g, " ");
+      var CHAR_LIMIT = 118;
+      var isLong = flatPreview.length > CHAR_LIMIT;
+      var previewHtml;
+      if(isLong){
+        var cut = flatPreview.slice(0, CHAR_LIMIT);
+        var lastSpace = cut.lastIndexOf(" ");
+        if(lastSpace > 60) cut = cut.slice(0, lastSpace);
+        previewHtml = escapeHtml(cut) + '… <span class="read-more">Leer más</span>';
+      } else {
+        previewHtml = escapeHtml(flatPreview);
+      }
+      card.innerHTML =
+        '<div class="note-title">' + escapeHtml(title) + '</div>' +
+        '<div class="note-preview">' + previewHtml + '</div>' +
+        '<div class="note-date">' + formatDate(note.updatedAt) + '</div>';
+      card.addEventListener("click", function(){
+        if(window.__onlyNotesSuppressClick) return;
+        openEditor(note.id);
+      });
+      notesListEl.appendChild(card);
+    });
+  }
+
+  // ── EDITOR ──
+  var screenList = document.getElementById("screen-list");
+  var screenEditor = document.getElementById("screen-editor");
+  var titleInput = document.getElementById("note-title-input");
+  var dateDisplay = document.getElementById("note-date-display");
+  var bodyInput = document.getElementById("note-body-input");
+
+  var editingNoteId = null;
+  var editingFolderId = null;
+  var originalFolderId = null;
+  var originalTitle = "";
+  var originalBody = "";
+
+  function openEditor(noteId){
+    editingNoteId = noteId || null;
+    var note = noteId ? data.notes.find(function(n){ return n.id === noteId; }) : null;
+
+    if(note){
+      titleInput.value = note.title || "";
+      bodyInput.value = note.body || "";
+      dateDisplay.textContent = formatDate(note.updatedAt);
+      dateDisplay.classList.remove("hidden");
+      editingFolderId = note.folderId;
+      originalFolderId = note.folderId;
+      originalTitle = note.title || "";
+      originalBody = note.body || "";
+    } else {
+      titleInput.value = "";
+      bodyInput.value = "";
+      dateDisplay.textContent = "";
+      dateDisplay.classList.add("hidden");
+      editingFolderId = currentFolder().id;
+      originalFolderId = null;
+      originalTitle = "";
+      originalBody = "";
+    }
+
+    screenList.classList.add("hidden");
+    screenEditor.classList.remove("hidden");
+    setTimeout(function(){ titleInput.focus(); }, 50);
+  }
+
+  function hasContent(){
+    return !!(titleInput.value.trim() || bodyInput.value.trim());
+  }
+
+  function closeEditorToList(){
+    screenEditor.classList.add("hidden");
+    screenList.classList.remove("hidden");
+    renderList();
+  }
+
+  function commitSave(folderId){
+    var now = Date.now();
+    if(editingNoteId){
+      var note = data.notes.find(function(n){ return n.id === editingNoteId; });
+      note.title = titleInput.value;
+      note.body = bodyInput.value;
+      note.folderId = folderId;
+      note.updatedAt = now;
+    } else {
+      var newNote = {
+        id: uid(),
+        folderId: folderId,
+        title: titleInput.value,
+        body: bodyInput.value,
+        createdAt: now,
+        updatedAt: now
+      };
+      data.notes.push(newNote);
+      editingNoteId = newNote.id;
+    }
+    data.currentFolderId = folderId;
+    saveData();
+    closeEditorToList();
+  }
+
+  // ── MODAL: GUARDAR (se abre al pulsar "Guardar" o al salir con cambios) ──
+  var modalSavePick = document.getElementById("modal-save-pick");
+  var savePickChips = document.getElementById("save-pick-chips");
+  var savePickTitle = document.getElementById("save-pick-title");
+  var saveNewFolderInput = document.getElementById("save-new-folder-input");
+  var savePickDiscard = document.getElementById("save-pick-discard");
+  var savePickMode = "save"; // "save" | "exit"
+
+  function renderSavePickChips(){
+    savePickChips.innerHTML = "";
+    data.folders.forEach(function(f){
+      var chip = document.createElement("div");
+      chip.className = "folder-chip" + (f.id === editingFolderId ? " active" : "");
+      chip.innerHTML = '<span class="chip-name">' + escapeHtml(f.name) + '</span>';
+      chip.addEventListener("click", function(){
+        modalSavePick.classList.add("hidden");
+        commitSave(f.id);
+      });
+      savePickChips.appendChild(chip);
+    });
+  }
+
+  function openSavePick(mode){
+    savePickMode = mode;
+    savePickTitle.textContent = "Guardar en...";
+    savePickDiscard.classList.toggle("hidden", mode !== "exit");
+    saveNewFolderInput.value = "";
+    renderSavePickChips();
+    modalSavePick.classList.remove("hidden");
+  }
+
+  document.getElementById("save-new-folder-add").addEventListener("click", function(){
+    var name = saveNewFolderInput.value.trim();
+    if(!name) return;
+    var f = {id: uid(), name: name};
+    data.folders.push(f);
+    saveData();
+    saveNewFolderInput.value = "";
+    editingFolderId = f.id;
+    renderSavePickChips();
+  });
+  saveNewFolderInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ document.getElementById("save-new-folder-add").click(); }
+  });
+  document.getElementById("save-pick-cancel").addEventListener("click", function(){
+    modalSavePick.classList.add("hidden");
+  });
+  document.getElementById("save-pick-direct").addEventListener("click", function(){
+    modalSavePick.classList.add("hidden");
+    commitSave(editingNoteId ? originalFolderId : getAllFolder().id);
+  });
+  savePickDiscard.addEventListener("click", function(){
+    modalSavePick.classList.add("hidden");
+    closeEditorToList();
+  });
+
+  document.getElementById("btn-save").addEventListener("click", function(){
+    if(!hasContent()){
+      closeEditorToList();
+      return;
+    }
+    openSavePick("save");
+  });
+
+  document.getElementById("btn-cancel").addEventListener("click", function(){
+    closeEditorToList();
+  });
+
+  document.getElementById("btn-back").addEventListener("click", function(){
+    var changed = titleInput.value !== originalTitle || bodyInput.value !== originalBody;
+    if(changed && hasContent()){
+      openSavePick("exit");
+    } else {
+      closeEditorToList();
+    }
+  });
+
+  // ── + NUEVA NOTA ──
+  document.getElementById("btn-plus").addEventListener("click", function(){
+    openEditor(null);
+  });
+
+  // ── MODAL: CARPETAS (icono carpeta amarilla, gestión completa) ──
+  var modalFolders = document.getElementById("modal-folders");
+  var folderChipsMain = document.getElementById("folder-chips");
+  var newFolderInput = document.getElementById("new-folder-input");
+
+  function renderFolderModal(){
+    folderChipsMain.innerHTML = "";
+    data.folders.forEach(function(f){
+      var chip = document.createElement("div");
+      chip.className = "folder-chip" + (f.id === data.currentFolderId ? " active" : "");
+      chip.innerHTML =
+        '<span class="chip-name">' + escapeHtml(f.name) + '</span>' +
+        '<span class="chip-action" data-action="rename">&#9998;</span>' +
+        (f.isAll ? '' : '<span class="chip-action" data-action="delete">&#10005;</span>');
+      chip.querySelector(".chip-name").addEventListener("click", function(){
+        data.currentFolderId = f.id;
+        saveData();
+        renderList();
+        modalFolders.classList.add("hidden");
+      });
+      chip.querySelector('[data-action="rename"]').addEventListener("click", function(e){
+        e.stopPropagation();
+        var newName = prompt("Nuevo nombre de la carpeta:", f.name);
+        if(newName && newName.trim()){
+          f.name = newName.trim();
+          saveData();
+          renderFolderModal();
+          renderList();
+        }
+      });
+      if(f.isAll) { folderChipsMain.appendChild(chip); return; }
+      chip.querySelector('[data-action="delete"]').addEventListener("click", function(e){
+        e.stopPropagation();
+        var newName = prompt("Nuevo nombre de la carpeta:", f.name);
+        if(newName && newName.trim()){
+          f.name = newName.trim();
+          saveData();
+          renderFolderModal();
+          renderList();
+        }
+      });
+      chip.querySelector('[data-action="delete"]').addEventListener("click", function(e){
+        e.stopPropagation();
+        if(data.folders.length <= 1){
+          alert("Debe quedar al menos una carpeta.");
+          return;
+        }
+        if(confirm('¿Eliminar la carpeta "' + f.name + '" y todas sus notas?')){
+          data.notes = data.notes.filter(function(n){ return n.folderId !== f.id; });
+          data.folders = data.folders.filter(function(ff){ return ff.id !== f.id; });
+          if(data.currentFolderId === f.id){
+            data.currentFolderId = data.folders[0].id;
+          }
+          saveData();
+          renderFolderModal();
+          renderList();
+        }
+      });
+      folderChipsMain.appendChild(chip);
+    });
+  }
+
+  document.getElementById("btn-folder").addEventListener("click", function(){
+    renderFolderModal();
+    modalFolders.classList.remove("hidden");
+  });
+  document.getElementById("modal-close").addEventListener("click", function(){
+    modalFolders.classList.add("hidden");
+  });
+  document.getElementById("new-folder-add").addEventListener("click", function(){
+    var name = newFolderInput.value.trim();
+    if(!name) return;
+    var f = {id: uid(), name: name};
+    data.folders.push(f);
+    saveData();
+    newFolderInput.value = "";
+    renderFolderModal();
+  });
+  newFolderInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ document.getElementById("new-folder-add").click(); }
+  });
+
+  // ── MENÚ (icono cuaderno) — pendiente de definir funciones ──
+  function menuPlaceholder(){
+    alert("Aquí irá el menú: buscar, exportar, importar, compartir, eliminar, duplicar...");
+  }
+  document.getElementById("btn-menu").addEventListener("click", menuPlaceholder);
+  document.getElementById("btn-menu-editor").addEventListener("click", menuPlaceholder);
+
+  // ── GESTO: DESLIZAR PARA CAMBIAR DE CARPETA ──
+  (function(){
+    var startX = 0, startY = 0, tracking = false, isSwipeGesture = false;
+    var SWIPE_THRESHOLD = 55;
+
+    function goToAdjacentFolder(step){
+      var idx = data.folders.findIndex(function(f){ return f.id === data.currentFolderId; });
+      if(idx === -1) idx = 0;
+      var next = (idx + step + data.folders.length) % data.folders.length;
+      data.currentFolderId = data.folders[next].id;
+      saveData();
+      renderList();
+    }
+
+    notesListEl.addEventListener("touchstart", function(e){
+      if(e.touches.length !== 1) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+      isSwipeGesture = false;
+    }, {passive:true});
+
+    notesListEl.addEventListener("touchmove", function(e){
+      if(!tracking || !e.touches[0]) return;
+      var dx = e.touches[0].clientX - startX;
+      var dy = e.touches[0].clientY - startY;
+      if(Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.4){
+        isSwipeGesture = true;
+      }
+    }, {passive:true});
+
+    notesListEl.addEventListener("touchend", function(e){
+      if(!tracking) return;
+      tracking = false;
+      var t = (e.changedTouches && e.changedTouches[0]) || null;
+      if(!t) return;
+      var dx = t.clientX - startX;
+      var dy = t.clientY - startY;
+      if(isSwipeGesture && Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) * 1.4 && data.folders.length > 1){
+        window.__onlyNotesSuppressClick = true;
+        setTimeout(function(){ window.__onlyNotesSuppressClick = false; }, 400);
+        goToAdjacentFolder(dx < 0 ? 1 : -1);
+      }
+    });
+  })();
+
+  // ── ESPACIO EXTRA SOLO MIENTRAS EL TECLADO ESTÁ REALMENTE VISIBLE ──
+  var editorBodyWrap = document.getElementById("editor-body-wrap");
+  if(window.visualViewport){
+    var baseHeight = window.innerHeight;
+    window.addEventListener("resize", function(){
+      // el alto "de referencia" puede cambiar por rotación, barra del navegador, etc.
+      if(window.visualViewport.height > baseHeight) baseHeight = window.visualViewport.height;
+    });
+    function updateKbSpace(){
+      var ratio = window.visualViewport.height / baseHeight;
+      if(ratio < 0.75){
+        editorBodyWrap.classList.add("kb-open");
+      } else {
+        editorBodyWrap.classList.remove("kb-open");
+      }
+    }
+    window.visualViewport.addEventListener("resize", updateKbSpace);
+  } else {
+    function addKbSpace(){ editorBodyWrap.classList.add("kb-open"); }
+    function removeKbSpace(){ editorBodyWrap.classList.remove("kb-open"); }
+    titleInput.addEventListener("focus", addKbSpace);
+    bodyInput.addEventListener("focus", addKbSpace);
+    titleInput.addEventListener("blur", removeKbSpace);
+    bodyInput.addEventListener("blur", removeKbSpace);
+  }
+
+  // ── INICIO ──
+  renderList();
+})();
+</script>
+</body>
+</html>
