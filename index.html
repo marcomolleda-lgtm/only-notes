@@ -187,10 +187,6 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 #editor-body-wrap{
   flex:1;overflow-y:auto;
   padding:8px 26px 40px;
-  transition:padding-bottom 0.15s ease;
-}
-#editor-body-wrap.kb-open{
-  padding-bottom:280px;
 }
 #note-title-input{
   width:100%;
@@ -786,42 +782,6 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
       }
     });
   })();
-
-  // ── ESPACIO EXTRA SOLO MIENTRAS EL TECLADO ESTÁ REALMENTE VISIBLE ──
-  var editorBodyWrap = document.getElementById("editor-body-wrap");
-  function forceRepaint(){
-    requestAnimationFrame(function(){
-      var y = editorBodyWrap.scrollTop;
-      editorBodyWrap.scrollTop = y + 1;
-      requestAnimationFrame(function(){
-        editorBodyWrap.scrollTop = y;
-      });
-    });
-  }
-  if(window.visualViewport){
-    var baseHeight = window.innerHeight;
-    window.addEventListener("resize", function(){
-      // el alto "de referencia" puede cambiar por rotación, barra del navegador, etc.
-      if(window.visualViewport.height > baseHeight) baseHeight = window.visualViewport.height;
-    });
-    function updateKbSpace(){
-      var ratio = window.visualViewport.height / baseHeight;
-      if(ratio < 0.75){
-        editorBodyWrap.classList.add("kb-open");
-      } else {
-        editorBodyWrap.classList.remove("kb-open");
-      }
-      forceRepaint();
-    }
-    window.visualViewport.addEventListener("resize", updateKbSpace);
-  } else {
-    function addKbSpace(){ editorBodyWrap.classList.add("kb-open"); }
-    function removeKbSpace(){ editorBodyWrap.classList.remove("kb-open"); forceRepaint(); }
-    titleInput.addEventListener("focus", addKbSpace);
-    bodyInput.addEventListener("focus", addKbSpace);
-    titleInput.addEventListener("blur", removeKbSpace);
-    bodyInput.addEventListener("blur", removeKbSpace);
-  }
 
   // ── INICIO ──
   renderList();
