@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content"/>
 <meta name="color-scheme" content="light only"/>
 <meta name="theme-color" content="#e7e3da"/>
 <link rel="manifest" href="manifest.json"/>
@@ -786,12 +786,10 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   // ── EVITAR QUE EL SCROLL SE QUEDE MÁS ALLÁ DEL FINAL DEL TEXTO AL CERRAR EL TECLADO ──
   var editorBodyWrap = document.getElementById("editor-body-wrap");
   function clampEditorScroll(){
-    requestAnimationFrame(function(){
-      var maxScroll = editorBodyWrap.scrollHeight - editorBodyWrap.clientHeight;
-      if(editorBodyWrap.scrollTop > maxScroll){
-        editorBodyWrap.scrollTop = Math.max(0, maxScroll);
-      }
-    });
+    var maxScroll = editorBodyWrap.scrollHeight - editorBodyWrap.clientHeight;
+    if(editorBodyWrap.scrollTop > maxScroll){
+      editorBodyWrap.scrollTop = Math.max(0, maxScroll);
+    }
   }
   window.addEventListener("resize", clampEditorScroll);
   if(window.visualViewport){
