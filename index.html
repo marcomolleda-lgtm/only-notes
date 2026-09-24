@@ -791,9 +791,16 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
       editorBodyWrap.scrollTop = Math.max(0, maxScroll);
     }
   }
+  function resetPageScroll(){
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
   window.addEventListener("resize", clampEditorScroll);
+  window.addEventListener("scroll", resetPageScroll);
   if(window.visualViewport){
     window.visualViewport.addEventListener("resize", clampEditorScroll);
+    window.visualViewport.addEventListener("scroll", resetPageScroll);
   }
   if(window.ResizeObserver){
     var ro = new ResizeObserver(function(){ clampEditorScroll(); });
