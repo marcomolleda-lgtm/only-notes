@@ -185,11 +185,12 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 }
 #btn-back{font-size:24px;color:var(--text);padding:6px 10px;margin-left:-10px;}
 #editor-body-wrap{
-  flex:1;overflow-y:auto;
+  flex:1;overflow:hidden;
+  display:flex;flex-direction:column;
   padding:8px 26px 40px;
 }
 #note-title-input{
-  width:100%;
+  width:100%;flex-shrink:0;
   border:none;background:none;outline:none;
   font-family:'Lora',serif;
   font-size:22px;
@@ -204,9 +205,11 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   color:var(--text-muted);
   margin-bottom:24px;
   display:block;
+  flex-shrink:0;
 }
 #note-body-input{
-  width:100%;min-height:40vh;
+  width:100%;flex:1;min-height:0;
+  overflow-y:auto;
   border:none;background:none;outline:none;resize:none;
   font-family:'DM Sans',sans-serif;
   font-size:16px;
@@ -782,31 +785,6 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
       }
     });
   })();
-
-  // ── EVITAR QUE EL SCROLL SE QUEDE MÁS ALLÁ DEL FINAL DEL TEXTO AL CERRAR EL TECLADO ──
-  var editorBodyWrap = document.getElementById("editor-body-wrap");
-  function clampEditorScroll(){
-    var maxScroll = editorBodyWrap.scrollHeight - editorBodyWrap.clientHeight;
-    if(editorBodyWrap.scrollTop > maxScroll){
-      editorBodyWrap.scrollTop = Math.max(0, maxScroll);
-    }
-  }
-  function resetPageScroll(){
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  }
-  window.addEventListener("resize", clampEditorScroll);
-  window.addEventListener("scroll", resetPageScroll);
-  if(window.visualViewport){
-    window.visualViewport.addEventListener("resize", clampEditorScroll);
-    window.visualViewport.addEventListener("scroll", resetPageScroll);
-  }
-  if(window.ResizeObserver){
-    var ro = new ResizeObserver(function(){ clampEditorScroll(); });
-    ro.observe(editorBodyWrap);
-    ro.observe(document.getElementById("screen-editor"));
-  }
 
   // ── INICIO ──
   renderList();
