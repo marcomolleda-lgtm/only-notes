@@ -795,6 +795,11 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   if(window.visualViewport){
     window.visualViewport.addEventListener("resize", clampEditorScroll);
   }
+  if(window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ clampEditorScroll(); });
+    ro.observe(editorBodyWrap);
+    ro.observe(document.getElementById("screen-editor"));
+  }
 
   // ── INICIO ──
   renderList();
