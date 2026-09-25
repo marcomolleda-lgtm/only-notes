@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
 <meta name="color-scheme" content="light only"/>
 <meta name="theme-color" content="#e7e3da"/>
 <link rel="manifest" href="manifest.json"/>
@@ -218,11 +218,14 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   padding-top:calc(14px + env(safe-area-inset-top,0px));
   flex-shrink:0;
 }
-#btn-back{font-size:24px;color:var(--text);padding:6px 10px;margin-left:-10px;}
+#btn-back{font-size:32px;color:var(--text);padding:6px 10px;margin-left:-10px;}
+#editor-header-actions{display:flex;align-items:center;gap:16px;}
+#editor-header-actions #btn-cancel{font-size:15px;color:var(--text-muted);}
+#editor-header-actions #btn-save{font-size:15px;color:var(--date);font-weight:600;}
 #editor-body-wrap{
   flex:1;overflow:hidden;
   display:flex;flex-direction:column;
-  padding:8px 26px 40px;
+  padding:8px 26px calc(20px + env(safe-area-inset-bottom,0px));
 }
 #note-title-input{
   width:100%;flex-shrink:0;
@@ -249,22 +252,13 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   white-space:pre-wrap;
   word-wrap:break-word;
   font-family:'DM Sans',sans-serif;
-  font-size:16px;
+  font-size:17px;
   line-height:1.75;
   color:var(--text);
+  padding-bottom:160px;
 }
 #note-body-input:empty:before{content:attr(data-placeholder);color:var(--text-muted);}
 #note-body-input a{color:var(--date);text-decoration:underline;}
-
-#editor-footer{
-  flex-shrink:0;
-  padding:16px 26px calc(18px + env(safe-area-inset-bottom,0px));
-  display:flex;align-items:center;justify-content:flex-end;
-  gap:22px;
-  border-top:1px solid var(--border);
-}
-#btn-cancel{font-size:15px;color:var(--text-muted);}
-#btn-save{font-size:15px;color:var(--date);font-weight:600;}
 
 /* ── VENTANAS FLOTANTES (MODALES) ── */
 .modal-overlay{
@@ -390,18 +384,18 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 <div id="screen-editor" class="screen hidden">
   <div id="editor-header">
     <button class="icon-btn" id="btn-back" aria-label="Volver">&#8592;</button>
+    <div id="editor-header-actions">
+      <button id="btn-cancel">Cancelar</button>
+      <button id="btn-save">Guardar</button>
     <button class="icon-btn" id="btn-menu-editor" aria-label="Menú">
       <img src="data:image/png;base64,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" alt="Menú" style="height:24px;"/>
     </button>
+    </div>
   </div>
   <div id="editor-body-wrap">
     <input id="note-title-input" type="text" placeholder="Título de la nota"/>
     <span id="note-date-display"></span>
     <div id="note-body-input" contenteditable="true" data-placeholder="Escribe aquí..."></div>
-  </div>
-  <div id="editor-footer">
-    <button id="btn-cancel">Cancelar</button>
-    <button id="btn-save">Guardar</button>
   </div>
 </div>
 
@@ -581,41 +575,6 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   var dateDisplay = document.getElementById("note-date-display");
   var bodyInput = document.getElementById("note-body-input");
 
-  // ── Mantener el cursor visible por encima del teclado al escribir ──
-  // (no toca el tamaño de la pantalla ni la posicion de la barra inferior,
-  // solo ajusta el scroll interno del propio cuadro de texto)
-  function keepCaretAboveKeyboard(){
-    if(!window.visualViewport) return;
-    var sel = window.getSelection();
-    if(!sel || sel.rangeCount === 0) return;
-    if(!bodyInput.contains(sel.anchorNode)) return;
-    var range = sel.getRangeAt(0).cloneRange();
-    range.collapse(true);
-    var rects = range.getClientRects();
-    var rect = rects.length ? rects[rects.length - 1] : range.getBoundingClientRect();
-    if(!rect || (rect.top === 0 && rect.bottom === 0)) return;
-    var vv = window.visualViewport;
-    var visibleBottom = vv.offsetTop + vv.height;
-    var margin = 16;
-    var overflow = rect.bottom - (visibleBottom - margin);
-    if(overflow > 0){
-      bodyInput.scrollTop += overflow;
-    }
-  }
-  bodyInput.addEventListener("input", function(){
-    requestAnimationFrame(keepCaretAboveKeyboard);
-  });
-  bodyInput.addEventListener("keydown", function(e){
-    if(e.key === "Enter" || e.key === "ArrowDown"){
-      requestAnimationFrame(keepCaretAboveKeyboard);
-    }
-  });
-  if(window.visualViewport){
-    window.visualViewport.addEventListener("resize", function(){
-      requestAnimationFrame(keepCaretAboveKeyboard);
-    });
-  }
-
   // ── AUTO-ENLACE DE URLS Y CORREOS ──
   var LINK_RE = /((?:https?:\/\/|www\.)[^\s<]+[^\s<.,;:!?)\]]|[\w.+-]+@[\w-]+\.[\w.-]+)/g;
   function linkifyHtml(escapedText){
@@ -628,7 +587,11 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     });
   }
   function getBodyText(){
-    return bodyInput.textContent || "";
+    // innerText (no textContent) porque respeta los saltos de línea reales
+    // que crea el teclado (ya sean <br>, párrafos <div>, o "\n" sueltos).
+    // textContent los ignoraba y por eso, al guardar y reabrir, los
+    // párrafos con punto y aparte aparecían todos seguidos.
+    return bodyInput.innerText || "";
   }
   function setBodyText(text){
     bodyInput.innerHTML = text ? linkifyHtml(escapeHtml(text)) : "";
@@ -686,7 +649,11 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 
     screenList.classList.add("hidden");
     screenEditor.classList.remove("hidden");
-    setTimeout(function(){ titleInput.focus(); }, 50);
+    if(note){
+      setTimeout(function(){ titleInput.focus(); }, 50);
+    } else {
+      setTimeout(function(){ bodyInput.focus(); }, 50);
+    }
   }
 
   function hasContent(){
