@@ -78,7 +78,8 @@ body{
 img{-webkit-user-drag:none;user-select:none;}
 button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit;}
 .screen{
-  position:fixed;inset:0;
+  position:fixed;top:0;left:0;right:0;
+  height:var(--vh, 100vh);
   display:flex;flex-direction:column;
   background:var(--bg);
 }
@@ -462,6 +463,18 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 
 <script>
 (function(){
+  // ── Ajusta el alto real de la pantalla cuando aparece el teclado ──
+  // (necesario porque el viewport usa interactive-widget=overlays-content)
+  function syncViewportHeight(){
+    var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    document.documentElement.style.setProperty('--vh', h + 'px');
+  }
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', syncViewportHeight);
+    window.visualViewport.addEventListener('scroll', syncViewportHeight);
+  }
+  window.addEventListener('resize', syncViewportHeight);
+  syncViewportHeight();
   "use strict";
 
 
