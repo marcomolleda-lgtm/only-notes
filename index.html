@@ -78,8 +78,7 @@ body{
 img{-webkit-user-drag:none;user-select:none;}
 button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit;}
 .screen{
-  position:fixed;top:0;left:0;right:0;
-  height:var(--vh, 100vh);
+  position:fixed;inset:0;
   display:flex;flex-direction:column;
   background:var(--bg);
 }
@@ -463,18 +462,6 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 
 <script>
 (function(){
-  // ── Ajusta el alto real de la pantalla cuando aparece el teclado ──
-  // (necesario porque el viewport usa interactive-widget=overlays-content)
-  function syncViewportHeight(){
-    var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
-    document.documentElement.style.setProperty('--vh', h + 'px');
-  }
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize', syncViewportHeight);
-    window.visualViewport.addEventListener('scroll', syncViewportHeight);
-  }
-  window.addEventListener('resize', syncViewportHeight);
-  syncViewportHeight();
   "use strict";
 
 
@@ -593,6 +580,41 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   var titleInput = document.getElementById("note-title-input");
   var dateDisplay = document.getElementById("note-date-display");
   var bodyInput = document.getElementById("note-body-input");
+
+  // ── Mantener el cursor visible por encima del teclado al escribir ──
+  // (no toca el tamaño de la pantalla ni la posicion de la barra inferior,
+  // solo ajusta el scroll interno del propio cuadro de texto)
+  function keepCaretAboveKeyboard(){
+    if(!window.visualViewport) return;
+    var sel = window.getSelection();
+    if(!sel || sel.rangeCount === 0) return;
+    if(!bodyInput.contains(sel.anchorNode)) return;
+    var range = sel.getRangeAt(0).cloneRange();
+    range.collapse(true);
+    var rects = range.getClientRects();
+    var rect = rects.length ? rects[rects.length - 1] : range.getBoundingClientRect();
+    if(!rect || (rect.top === 0 && rect.bottom === 0)) return;
+    var vv = window.visualViewport;
+    var visibleBottom = vv.offsetTop + vv.height;
+    var margin = 16;
+    var overflow = rect.bottom - (visibleBottom - margin);
+    if(overflow > 0){
+      bodyInput.scrollTop += overflow;
+    }
+  }
+  bodyInput.addEventListener("input", function(){
+    requestAnimationFrame(keepCaretAboveKeyboard);
+  });
+  bodyInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === "ArrowDown"){
+      requestAnimationFrame(keepCaretAboveKeyboard);
+    }
+  });
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", function(){
+      requestAnimationFrame(keepCaretAboveKeyboard);
+    });
+  }
 
   // ── AUTO-ENLACE DE URLS Y CORREOS ──
   var LINK_RE = /((?:https?:\/\/|www\.)[^\s<]+[^\s<.,;:!?)\]]|[\w.+-]+@[\w-]+\.[\w.-]+)/g;
