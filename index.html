@@ -231,7 +231,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   width:100%;flex-shrink:0;
   border:none;background:none;outline:none;
   font-family:'Lora',serif;
-  font-size:23px;
+  font-size:22px;
   font-weight:600;
   color:var(--text);
   margin-bottom:8px;
@@ -259,6 +259,25 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 }
 #note-body-input:empty:before{content:attr(data-placeholder);color:var(--text-muted);}
 #note-body-input a{color:var(--date);text-decoration:underline;}
+
+#editor-toolbar{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:4px;
+  padding:6px 20px calc(6px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid var(--border);
+  background:var(--bg);
+}
+#editor-toolbar.hidden{display:none;}
+#editor-toolbar .fmt-btn{
+  width:42px;height:42px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;color:var(--text);
+  border-radius:10px;
+}
+#editor-toolbar .fmt-btn.active{
+  background:var(--topbar-dark);
+  color:var(--date);
+}
 
 /* ── VENTANAS FLOTANTES (MODALES) ── */
 .modal-overlay{
@@ -393,9 +412,14 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     </div>
   </div>
   <div id="editor-body-wrap">
-    <input id="note-title-input" type="text" placeholder="Título de la nota" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"/>
+    <input id="note-title-input" type="text" placeholder="Título de la nota"/>
     <span id="note-date-display"></span>
     <div id="note-body-input" contenteditable="true" data-placeholder="Escribe aquí..."></div>
+  </div>
+  <div id="editor-toolbar" class="hidden">
+    <button class="fmt-btn" id="fmt-bold" aria-label="Negrita"><b>B</b></button>
+    <button class="fmt-btn" id="fmt-italic" aria-label="Cursiva"><i>I</i></button>
+    <button class="fmt-btn" id="fmt-underline" aria-label="Subrayado"><u>S</u></button>
   </div>
 </div>
 
@@ -575,6 +599,43 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   var dateDisplay = document.getElementById("note-date-display");
   var bodyInput = document.getElementById("note-body-input");
 
+  function getBodyHTML(){
+    return bodyInput.innerHTML;
+  }
+
+  // ── BARRA DE FORMATO (negrita/cursiva/subrayado) ──
+  // Aparece solo mientras se escribe en el cuerpo de la nota.
+  var editorToolbar = document.getElementById("editor-toolbar");
+  var fmtBoldBtn = document.getElementById("fmt-bold");
+  var fmtItalicBtn = document.getElementById("fmt-italic");
+  var fmtUnderlineBtn = document.getElementById("fmt-underline");
+
+  function showEditorToolbar(){ editorToolbar.classList.remove("hidden"); }
+  function hideEditorToolbar(){ editorToolbar.classList.add("hidden"); }
+  bodyInput.addEventListener("focus", showEditorToolbar);
+  bodyInput.addEventListener("blur", hideEditorToolbar);
+  titleInput.addEventListener("focus", hideEditorToolbar);
+
+  function updateToolbarState(){
+    try{
+      fmtBoldBtn.classList.toggle("active", document.queryCommandState("bold"));
+      fmtItalicBtn.classList.toggle("active", document.queryCommandState("italic"));
+      fmtUnderlineBtn.classList.toggle("active", document.queryCommandState("underline"));
+    }catch(e){}
+  }
+  document.addEventListener("selectionchange", function(){
+    if(document.activeElement === bodyInput) updateToolbarState();
+  });
+
+  [fmtBoldBtn, fmtItalicBtn, fmtUnderlineBtn].forEach(function(btn){
+    // Evita que el botón robe el foco/la selección del cuerpo de la nota
+    // (si no, el teclado se cerraría y la barra desaparecería al tocarlo).
+    btn.addEventListener("pointerdown", function(e){ e.preventDefault(); });
+  });
+  fmtBoldBtn.addEventListener("click", function(){ document.execCommand("bold", false, null); updateToolbarState(); });
+  fmtItalicBtn.addEventListener("click", function(){ document.execCommand("italic", false, null); updateToolbarState(); });
+  fmtUnderlineBtn.addEventListener("click", function(){ document.execCommand("underline", false, null); updateToolbarState(); });
+
   // ── AUTO-ENLACE DE URLS Y CORREOS ──
   var LINK_RE = /((?:https?:\/\/|www\.)[^\s<]+[^\s<.,;:!?)\]]|[\w.+-]+@[\w-]+\.[\w.-]+)/g;
   function linkifyHtml(escapedText){
@@ -597,8 +658,49 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     bodyInput.innerHTML = text ? linkifyHtml(escapeHtml(text)) : "";
   }
   function relinkifyBodyNow(){
-    var text = getBodyText();
-    setBodyText(text);
+    // Ojo: NO reconstruir todo el HTML desde el texto plano (eso borraría
+    // la negrita/cursiva/subrayado). Solo recorremos los nodos de texto
+    // sueltos (los que no estén ya dentro de un enlace) y convertimos en
+    // enlaces las URLs/correos que encuentre, sin tocar el resto del DOM.
+    var walker = document.createTreeWalker(bodyInput, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node){
+        var p = node.parentNode;
+        while(p && p !== bodyInput){
+          if(p.nodeName === "A") return NodeFilter.FILTER_REJECT;
+          p = p.parentNode;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var textNodes = [];
+    var n;
+    while(n = walker.nextNode()) textNodes.push(n);
+    textNodes.forEach(function(node){
+      var text = node.nodeValue;
+      LINK_RE.lastIndex = 0;
+      if(!LINK_RE.test(text)) return;
+      LINK_RE.lastIndex = 0;
+      var frag = document.createDocumentFragment();
+      var lastIndex = 0;
+      var match;
+      while((match = LINK_RE.exec(text))){
+        if(match.index > lastIndex) frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+        var m = match[0];
+        var a = document.createElement("a");
+        a.setAttribute("contenteditable", "false");
+        if(m.indexOf("@") !== -1 && m.indexOf("http") !== 0 && m.indexOf("www.") !== 0){
+          a.href = "mailto:" + m;
+        } else {
+          a.href = m.indexOf("http") === 0 ? m : "https://" + m;
+          a.target = "_blank"; a.rel = "noopener";
+        }
+        a.textContent = m;
+        frag.appendChild(a);
+        lastIndex = match.index + m.length;
+      }
+      if(lastIndex < text.length) frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+      node.parentNode.replaceChild(frag, node);
+    });
   }
   // Tecla Enter: insertar un salto de línea de texto simple (sin crear <div>/<p> anidados)
   bodyInput.addEventListener("keydown", function(e){
@@ -646,6 +748,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   var originalFolderId = null;
   var originalTitle = "";
   var originalBody = "";
+  var originalBodyHtml = "";
 
   function openEditor(noteId){
     editingNoteId = noteId || null;
@@ -653,13 +756,20 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 
     if(note){
       titleInput.value = note.title || "";
-      setBodyText(note.body || "");
+      if(note.bodyHtml){
+        // Nota ya guardada con formato (negrita/cursiva/subrayado): se
+        // restaura el HTML tal cual, tal y como se guardó.
+        bodyInput.innerHTML = note.bodyHtml;
+      } else {
+        setBodyText(note.body || "");
+      }
       dateDisplay.textContent = formatDate(note.updatedAt);
       dateDisplay.classList.remove("hidden");
       editingFolderId = note.folderId;
       originalFolderId = note.folderId;
       originalTitle = note.title || "";
       originalBody = note.body || "";
+      originalBodyHtml = bodyInput.innerHTML;
     } else {
       titleInput.value = "";
       setBodyText("");
@@ -669,11 +779,14 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
       originalFolderId = null;
       originalTitle = "";
       originalBody = "";
+      originalBodyHtml = "";
     }
 
     screenList.classList.add("hidden");
     screenEditor.classList.remove("hidden");
-    if(!note){
+    if(note){
+      setTimeout(function(){ titleInput.focus(); }, 50);
+    } else {
       setTimeout(function(){ bodyInput.focus(); }, 50);
     }
   }
@@ -691,10 +804,12 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   function commitSave(folderId){
     var now = Date.now();
     var bodyText = getBodyText();
+    var bodyHtml = getBodyHTML();
     if(editingNoteId){
       var note = data.notes.find(function(n){ return n.id === editingNoteId; });
       note.title = titleInput.value;
       note.body = bodyText;
+      note.bodyHtml = bodyHtml;
       note.folderId = folderId;
       note.updatedAt = now;
     } else {
@@ -703,6 +818,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
         folderId: folderId,
         title: titleInput.value,
         body: bodyText,
+        bodyHtml: bodyHtml,
         createdAt: now,
         updatedAt: now
       };
@@ -783,7 +899,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   });
 
   document.getElementById("btn-back").addEventListener("click", function(){
-    var changed = titleInput.value !== originalTitle || getBodyText() !== originalBody;
+    var changed = titleInput.value !== originalTitle || getBodyText() !== originalBody || bodyInput.innerHTML !== originalBodyHtml;
     if(changed && hasContent()){
       openSavePick("exit");
     } else {
@@ -1022,6 +1138,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
             folderId: idMap[n.folderId] || getAllFolder().id,
             title: n.title || "",
             body: n.body || "",
+            bodyHtml: n.bodyHtml || "",
             createdAt: n.createdAt || Date.now(),
             updatedAt: n.updatedAt || Date.now()
           });
@@ -1088,6 +1205,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
       folderId: note.folderId,
       title: (note.title && note.title.trim() ? note.title : "Sin título") + " (copia)",
       body: note.body,
+      bodyHtml: note.bodyHtml,
       createdAt: now,
       updatedAt: now
     };
