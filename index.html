@@ -231,7 +231,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   width:100%;flex-shrink:0;
   border:none;background:none;outline:none;
   font-family:'Lora',serif;
-  font-size:22px;
+  font-size:23px;
   font-weight:600;
   color:var(--text);
   margin-bottom:8px;
@@ -393,7 +393,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     </div>
   </div>
   <div id="editor-body-wrap">
-    <input id="note-title-input" type="text" placeholder="Título de la nota"/>
+    <input id="note-title-input" type="text" placeholder="Título de la nota" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"/>
     <span id="note-date-display"></span>
     <div id="note-body-input" contenteditable="true" data-placeholder="Escribe aquí..."></div>
   </div>
@@ -673,9 +673,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 
     screenList.classList.add("hidden");
     screenEditor.classList.remove("hidden");
-    if(note){
-      setTimeout(function(){ titleInput.focus(); }, 50);
-    } else {
+    if(!note){
       setTimeout(function(){ bodyInput.focus(); }, 50);
     }
   }
