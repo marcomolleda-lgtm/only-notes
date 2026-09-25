@@ -52,8 +52,8 @@
 </style>
 <style>
 :root{
-  --bg:#f9f8f4;
-  --topbar-dark:#eeebe5;
+  --bg:#faf9f5;
+  --topbar-dark:#f0ede8;
   --tab-shadow: rgba(112,103,81,0.38);
   --white:#ffffff;
   --text:#242320;
@@ -252,7 +252,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   white-space:pre-wrap;
   word-wrap:break-word;
   font-family:'DM Sans',sans-serif;
-  font-size:17px;
+  font-size:18px;
   line-height:1.75;
   color:var(--text);
   padding-bottom:160px;
@@ -605,6 +605,30 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     if(e.key === "Enter"){
       e.preventDefault();
       document.execCommand("insertText", false, "\n");
+      // Como el salto lo insertamos nosotros (en vez del Enter nativo del
+      // teclado), el navegador no hace su scroll automático de "llevar el
+      // cursor a la vista" al pulsar la flecha azul. Lo replicamos a mano.
+      requestAnimationFrame(function(){
+        var sel = window.getSelection();
+        var rect = null;
+        if(sel && sel.rangeCount){
+          var r = sel.getRangeAt(0).cloneRange();
+          r.collapse(true);
+          var rects = r.getClientRects();
+          if(rects.length) rect = rects[0];
+        }
+        if(rect){
+          var boxRect = bodyInput.getBoundingClientRect();
+          if(rect.bottom > boxRect.bottom - 4){
+            bodyInput.scrollTop += (rect.bottom - boxRect.bottom) + 40;
+          }
+        } else {
+          // El cursor está justo al final del texto: en ese punto exacto
+          // el navegador no puede calcular su posición, así que bajamos
+          // el scroll al máximo (el margen extra ya deja hueco de sobra).
+          bodyInput.scrollTop = bodyInput.scrollHeight;
+        }
+      });
     }
   });
   // Si el usuario borra todo el contenido, algunos navegadores dejan un <br> suelto;
