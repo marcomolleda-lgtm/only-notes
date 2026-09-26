@@ -270,14 +270,6 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   border-top:1px solid var(--border);
   background:var(--bg);
 }
-/* Reserva hueco extra abajo mientras el teclado está abierto: algunos
-   navegadores (Chrome, Edge) dibujan su propia barra de autorrelleno
-   (llave/tarjeta/ubicación) pegada al teclado y por encima de cualquier
-   otro contenido, tapando lo que haya justo ahí. Este margen empuja
-   nuestra barra por encima de ese hueco reservado. */
-#editor-toolbar.keyboard-open{
-  margin-bottom:52px;
-}
 #editor-toolbar.hidden{display:none;}
 #editor-toolbar .fmt-btn{
   width:42px;height:42px;
@@ -621,8 +613,28 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   var fmtItalicBtn = document.getElementById("fmt-italic");
   var fmtUnderlineBtn = document.getElementById("fmt-underline");
 
-  function showEditorToolbar(){ editorToolbar.classList.remove("hidden"); editorToolbar.classList.add("keyboard-open"); }
-  function hideEditorToolbar(){ editorToolbar.classList.add("hidden"); editorToolbar.classList.remove("keyboard-open"); }
+  function showEditorToolbar(){ editorToolbar.classList.remove("hidden"); }
+  function hideEditorToolbar(){ editorToolbar.classList.add("hidden"); }
+
+  // Ocultar la barra en cuanto se cierra el teclado (no solo al cambiar
+  // de campo): comparamos el alto visible actual contra el máximo alto
+  // visto hasta ahora (pantalla sin teclado). Si vuelve a ese máximo,
+  // el teclado se ha cerrado.
+  var maxViewportHeight = window.innerHeight;
+  function checkKeyboardState(){
+    var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    if(vh > maxViewportHeight) maxViewportHeight = vh;
+    var keyboardClosed = vh >= maxViewportHeight - 2;
+    if(keyboardClosed){
+      hideEditorToolbar();
+    } else if(document.activeElement === bodyInput){
+      showEditorToolbar();
+    }
+  }
+  window.addEventListener("resize", checkKeyboardState);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", checkKeyboardState);
+  }
   bodyInput.addEventListener("focus", showEditorToolbar);
   bodyInput.addEventListener("blur", hideEditorToolbar);
   titleInput.addEventListener("focus", hideEditorToolbar);
