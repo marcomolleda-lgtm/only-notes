@@ -270,6 +270,14 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   border-top:1px solid var(--border);
   background:var(--bg);
 }
+/* Reserva hueco extra abajo mientras el teclado está abierto: algunos
+   navegadores (Chrome, Edge) dibujan su propia barra de autorrelleno
+   (llave/tarjeta/ubicación) pegada al teclado y por encima de cualquier
+   otro contenido, tapando lo que haya justo ahí. Este margen empuja
+   nuestra barra por encima de ese hueco reservado. */
+#editor-toolbar.keyboard-open{
+  margin-bottom:52px;
+}
 #editor-toolbar.hidden{display:none;}
 #editor-toolbar .fmt-btn{
   width:42px;height:42px;
@@ -419,7 +427,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     <span id="note-date-display"></span>
     <div id="note-body-input" contenteditable="true" data-placeholder="Escribe aquí..." autocomplete="off" autocorrect="off"></div>
   </div>
-  <div id="editor-toolbar" class="hidden">
+  <div id="editor-toolbar" style="background:red !important; display:flex !important; border:6px solid lime;">
     <button class="fmt-btn" id="fmt-bold" aria-label="Negrita"><b>B</b></button>
     <button class="fmt-btn" id="fmt-italic" aria-label="Cursiva"><i>I</i></button>
     <button class="fmt-btn" id="fmt-underline" aria-label="Subrayado"><u>S</u></button>
@@ -613,8 +621,8 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   var fmtItalicBtn = document.getElementById("fmt-italic");
   var fmtUnderlineBtn = document.getElementById("fmt-underline");
 
-  function showEditorToolbar(){ editorToolbar.classList.remove("hidden"); }
-  function hideEditorToolbar(){ editorToolbar.classList.add("hidden"); }
+  function showEditorToolbar(){ editorToolbar.classList.remove("hidden"); editorToolbar.classList.add("keyboard-open"); }
+  function hideEditorToolbar(){ editorToolbar.classList.add("hidden"); editorToolbar.classList.remove("keyboard-open"); }
   bodyInput.addEventListener("focus", showEditorToolbar);
   bodyInput.addEventListener("blur", hideEditorToolbar);
   titleInput.addEventListener("focus", hideEditorToolbar);
