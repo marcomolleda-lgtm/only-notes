@@ -239,6 +239,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   color:var(--text);
   margin-bottom:8px;
 }
+#note-title-input:empty:before{content:attr(data-placeholder);color:var(--text-muted);}
 #note-title-input::placeholder{color:var(--text-muted);font-weight:500;}
 #note-date-display{
   font-family:'Lora',serif;
@@ -415,7 +416,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     </div>
   </div>
   <div id="editor-body-wrap">
-    <input id="note-title-input" type="text" placeholder="Título de la nota" autocomplete="off" autocorrect="off" name="notematic-title-no-autofill"/>
+    <div id="note-title-input" contenteditable="true" data-placeholder="Título de la nota"></div>
     <span id="note-date-display"></span>
     <div id="note-body-input" contenteditable="true" data-placeholder="Escribe aquí..." autocomplete="off" autocorrect="off"></div>
   </div>
@@ -637,6 +638,13 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   }
   bodyInput.addEventListener("focus", showEditorToolbar);
   bodyInput.addEventListener("blur", hideEditorToolbar);
+  // Enter en el título pasa el foco al cuerpo, en vez de crear un salto de línea
+  titleInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      e.preventDefault();
+      bodyInput.focus();
+    }
+  });
   titleInput.addEventListener("focus", hideEditorToolbar);
 
   function updateToolbarState(){
@@ -778,7 +786,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     var note = noteId ? data.notes.find(function(n){ return n.id === noteId; }) : null;
 
     if(note){
-      titleInput.value = note.title || "";
+      titleInput.textContent = note.title || "";
       if(note.bodyHtml){
         // Nota ya guardada con formato (negrita/cursiva/subrayado): se
         // restaura el HTML tal cual, tal y como se guardó.
@@ -794,7 +802,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
       originalBody = note.body || "";
       originalBodyHtml = bodyInput.innerHTML;
     } else {
-      titleInput.value = "";
+      titleInput.textContent = "";
       setBodyText("");
       dateDisplay.textContent = "";
       dateDisplay.classList.add("hidden");
@@ -815,7 +823,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   }
 
   function hasContent(){
-    return !!(titleInput.value.trim() || getBodyText().trim());
+    return !!(titleInput.textContent.trim() || getBodyText().trim());
   }
 
   function closeEditorToList(){
@@ -830,7 +838,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
     var bodyHtml = getBodyHTML();
     if(editingNoteId){
       var note = data.notes.find(function(n){ return n.id === editingNoteId; });
-      note.title = titleInput.value;
+      note.title = titleInput.textContent;
       note.body = bodyText;
       note.bodyHtml = bodyHtml;
       note.folderId = folderId;
@@ -839,7 +847,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
       var newNote = {
         id: uid(),
         folderId: folderId,
-        title: titleInput.value,
+        title: titleInput.textContent,
         body: bodyText,
         bodyHtml: bodyHtml,
         createdAt: now,
@@ -922,7 +930,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
   });
 
   document.getElementById("btn-back").addEventListener("click", function(){
-    var changed = titleInput.value !== originalTitle || getBodyText() !== originalBody || bodyInput.innerHTML !== originalBodyHtml;
+    var changed = titleInput.textContent !== originalTitle || getBodyText() !== originalBody || bodyInput.innerHTML !== originalBodyHtml;
     if(changed && hasContent()){
       openSavePick("exit");
     } else {
@@ -1204,7 +1212,7 @@ button{font-family:inherit;border:none;background:none;cursor:pointer;color:inhe
 
   // ── COMPARTIR / DUPLICAR / ELIMINAR (nota actual en el editor) ──
   function shareCurrentNote(){
-    var title = titleInput.value.trim() || "Sin título";
+    var title = titleInput.textContent.trim() || "Sin título";
     var text = title + "\n\n" + getBodyText();
     if(navigator.share){
       navigator.share({title: title, text: text}).catch(function(){});
